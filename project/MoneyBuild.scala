@@ -25,7 +25,7 @@ object MoneyBuild extends Build {
     publishLocal := {},
     publish := {}
   )
-  .aggregate(moneyCore, moneyAspectj, moneyHttpClient, moneyJavaServlet, moneyKafka, moneySpring, moneySpring3, moneyWire)
+  .aggregate(moneyCore, moneyAspectj, moneyHttpClient, moneyJavaServlet, moneyKafka, moneySpring, moneyWire)
 
   lazy val moneyCore =
     Project("money-core", file("./money-core"))
@@ -117,7 +117,7 @@ object MoneyBuild extends Build {
           )
         },
         fork := false,
-        javacOptions in doc := Seq("-source", "1.6"),
+        javacOptions in doc := Seq("-source", "1.8"),
         // Configure the desired Avro version.  sbt-avro automatically injects a libraryDependency.
         (version in avroConfig) := "1.7.6",
         // Look for *.avsc etc. files in src/test/avro
@@ -168,33 +168,6 @@ object MoneyBuild extends Build {
       )
       .dependsOn(moneyCore)
 
-  lazy val moneySpring3 =
-    Project("money-spring3", file("./money-spring3"))
-      .configs(IntegrationTest)
-      .settings(projectSettings: _*)
-      .settings(
-        libraryDependencies <++= (scalaVersion) { v: String =>
-          Seq(
-            akkaActor(v),
-            akkaSlf4j(v),
-            akkaTestkit(v),
-            typesafeConfig,
-            scalaTest,
-            mockito,
-            springContext3,
-            springAop3,
-            junit,
-            junitInterface,
-            springTest,
-            mockito,
-            springOckito,
-            assertj
-          )
-        },
-        testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
-      )
-      .dependsOn(moneyCore)
-
   def projectSettings = basicSettings ++ Seq(
     ScoverageKeys.coverageHighlighting := true,
     ScoverageKeys.coverageMinimum := 90,
@@ -207,20 +180,19 @@ object MoneyBuild extends Build {
 
   def basicSettings =  Defaults.itSettings ++ SbtScalariform.scalariformSettings ++ Seq(
     organization := "com.comcast.money",
-    version := "0.8.14-SNAPSHOT",
-    crossScalaVersions := Seq("2.10.6", "2.11.7"),
-    scalaVersion := "2.10.6",
+    version := "0.8.14-ccad-20160405",
+    scalaVersion := "2.11.8",
     resolvers ++= Seq(
       "spray repo" at "http://repo.spray.io/",
       "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/"
     ),
     javacOptions in Compile ++= Seq(
-      "-source", "1.6",
-      "-target", "1.6",
+      "-source", "1.8",
+      "-target", "1.8",
       "-Xlint:unchecked",
       "-Xlint:deprecation",
       "-Xlint:-options"),
-    javacOptions in doc := Seq("-source", "1.6"),
+    javacOptions in doc := Seq("-source", "1.8"),
     scalacOptions ++= Seq(
       "-unchecked",
       "-deprecation",
@@ -291,19 +263,18 @@ object MoneyBuild extends Build {
   ) ++ HeaderPlugin.settingsFor(IntegrationTest) ++ AutomateHeaderPlugin.automateFor(Compile, Test, IntegrationTest)
 
   object Dependencies {
-    val akkaVersion = "2.2.3"
+    val akkaVersion = "2.4.3"
     val codahaleVersion = "3.0.2"
     val apacheHttpClientVersion = "4.3.5"
 
     // Logging, SlF4J must equal the same version used by akka
-    val slf4j = "org.slf4j" % "slf4j-api" % "1.7.5"
-    val log4jbinding = "org.slf4j" % "slf4j-log4j12" % "1.7.5" % "it,test"
+    val slf4j = "org.slf4j" % "slf4j-api" % "1.7.13"
+    val log4jbinding = "org.slf4j" % "slf4j-log4j12" % "1.7.13" % "it,test"
 
     // Akka
-    def akkaActor(scalaVersion: String) = "com.typesafe.akka" %% "akka-actor" % getAkkaVersion(scalaVersion)
-    def akkaSlf4j(scalaVersion: String) = "com.typesafe.akka" %% "akka-slf4j" % getAkkaVersion(scalaVersion) % "runtime"
-    def akkaTestkit(scalaVersion: String) = "com.typesafe.akka" %% "akka-testkit" % getAkkaVersion(scalaVersion) %
-      "it,test"
+    def akkaActor(scalaVersion: String) = "com.typesafe.akka" %% "akka-actor" % akkaVersion
+    def akkaSlf4j(scalaVersion: String) = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % "runtime"
+    def akkaTestkit(scalaVersion: String) = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "it,test"
 
     // Joda
     val jodaTime = "joda-time" % "joda-time" % "2.1"
@@ -313,7 +284,7 @@ object MoneyBuild extends Build {
     val json4sJackson = "org.json4s" %% "json4s-jackson" % "3.2.11"
 
     // Typseafe config
-    def typesafeConfig = "com.typesafe" % "config" % "1.2.1"
+    def typesafeConfig = "com.typesafe" % "config" % "1.3.0"
 
     // Codahale metrics
     val metricsCore = "com.codahale.metrics" % "metrics-core" % codahaleVersion
@@ -325,7 +296,7 @@ object MoneyBuild extends Build {
     val javaxServlet = "javax.servlet" % "servlet-api" % "2.5"
 
     // Kafka, exclude dependencies that we will not need, should work for 2.10 and 2.11
-    val kafka = ("org.apache.kafka" %% "kafka" % "0.8.2.2")
+    val kafka = ("org.apache.kafka" %% "kafka" % "0.9.0.1")
     .exclude("javax.jms", "jms")
     .exclude("com.sun.jdmk", "jmxtools")
     .exclude("com.sun.jmx", "jmxri")
@@ -343,11 +314,7 @@ object MoneyBuild extends Build {
     val commonsIo = "commons-io" % "commons-io" % "2.4"
 
     // Spring
-    val springContext3 = ("org.springframework" % "spring-context" % "3.2.6.RELEASE")
-    .exclude("commons-logging", "commons-logging")
-
-    val springAop3 = "org.springframework" % "spring-aop" % "3.2.6.RELEASE"
-    val springContext = "org.springframework" % "spring-context" % "4.1.1.RELEASE"
+    val springContext = "org.springframework" % "spring-context" % "4.2.5.RELEASE"
 
     // Test
     val mockito = "org.mockito" % "mockito-core" % "1.9.5" % "test"
@@ -358,12 +325,5 @@ object MoneyBuild extends Build {
       .exclude("commons-logging", "commons-logging")
     val springOckito = "org.kubek2k" % "springockito" % "1.0.9" % "test"
     val assertj = "org.assertj" % "assertj-core" % "1.7.1" % "it,test"
-
-    def getAkkaVersion(scalaVersion: String) = {
-      scalaVersion match {
-        case version if version.startsWith("2.10") => "2.2.3"
-        case version if version.startsWith("2.11") => "2.3.4"
-      }
-    }
   }
 }

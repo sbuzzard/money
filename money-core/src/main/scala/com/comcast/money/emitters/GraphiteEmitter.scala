@@ -17,7 +17,7 @@
 package com.comcast.money.emitters
 
 import akka.actor._
-import akka.routing.RoundRobinRouter
+import akka.routing.RoundRobinPool
 import com.comcast.money.akka.ActorMaker
 import com.comcast.money.core.Span
 import com.comcast.money.internal.EmitterProtocol.{ EmitMetricDouble, EmitMetricLong, EmitSpan }
@@ -37,7 +37,7 @@ class GraphiteEmitter(conf: Config) extends Actor with ActorMaker with ActorLogg
 
   private val emitterPoolSize = conf.getInt("emitterPoolSize")
   private val router = makeActor(
-    GraphiteMetricEmitter.props(conf).withRouter(RoundRobinRouter(nrOfInstances = emitterPoolSize)), "graphite-router"
+    GraphiteMetricEmitter.props(conf).withRouter(RoundRobinPool(nrOfInstances = emitterPoolSize)), "graphite-router"
   )
 
   def receive = {
