@@ -47,7 +47,7 @@ class MDCSupport(enabled: Boolean = Money.Environment.enabled) {
 
   def propogateMDC(submittingThreadsContext: Option[Map[_, _]]): Unit = if (enabled) {
     submittingThreadsContext match {
-      case Some(context: Map[_, _]) => MDC.setContextMap(context)
+      case Some(context: Map[String, String]) => MDC.setContextMap(context)
       case None => MDC.clear()
     }
   }
